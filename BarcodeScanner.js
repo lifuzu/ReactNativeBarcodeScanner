@@ -64,6 +64,14 @@ var BarcodeScanner = React.createClass({
 
   takePicture: function(cb) {
     NativeModules.BarcodeScannerManager.takePicture(cb);
+  },
+
+  startScanning: function(cb) {
+    NativeModules.BarcodeScannerManager.startScanning(cb);
+  },
+
+  stopScanning: function() {
+    NativeModules.BarcodeScannerManager.stopScanning();
   }
 });
 

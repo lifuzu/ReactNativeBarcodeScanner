@@ -30,14 +30,23 @@ var ReactNativeBarcodeScanner = React.createClass({
             />
           </View>
         </TouchableHighlight>
+        <TouchableHighlight onPress={this._startScaning}>
+          <Text>Start Scaning</Text>
+        </TouchableHighlight>
         <TouchableHighlight onPress={this._stopScaning}>
-          <Text>Cancel</Text>
+          <Text>Stop Scaning</Text>
         </TouchableHighlight>
       </View>
     );
   },
   _switchCamera: function() {
     this.refs.scanner.switch();
+  },
+  _startScaning: function() {
+
+  },
+  _stopScaning: function() {
+    this.refs.scanner.stopScanning();
   }
 });
 

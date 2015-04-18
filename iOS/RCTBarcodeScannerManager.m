@@ -14,6 +14,10 @@
 #import "UIView+React.h"
 #import "UIImage+Resize.h"
 #import <AVFoundation/AVFoundation.h>
+#import <QuartzCore/QuartzCore.h>
+
+CGFloat const kFocalPointOfInterestX = 0.5;
+CGFloat const kFocalPointOfInterestY = 0.5;
 
 @implementation RCTBarcodeScannerManager
 
@@ -82,13 +86,22 @@ RCT_EXPORT_VIEW_PROPERTY(orientation, NSInteger);
         self.captureDeviceInput = captureDeviceInput;
       }
       
-      AVCaptureStillImageOutput *stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
-      if ([self.session canAddOutput:stillImageOutput])
+      AVCaptureMetadataOutput *captureOutput = [[AVCaptureMetadataOutput alloc] init];
+      if ([self.session canAddOutput:captureOutput])
       {
-        stillImageOutput.outputSettings = @{AVVideoCodecKey : AVVideoCodecJPEG};
-        [self.session addOutput:stillImageOutput];
-        self.stillImageOutput = stillImageOutput;
+        [captureOutput setMetadataObjectsDelegate:self queue:dispatch_get_main_queue()];
+        [self.session addOutput:captureOutput];
+//        captureOutput.metadataObjectTypes = [self defaultMetaDataObjectTypes];
+        captureOutput.metadataObjectTypes = [captureOutput availableMetadataObjectTypes];
       }
+
+//      AVCaptureStillImageOutput *stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
+//      if ([self.session canAddOutput:stillImageOutput])
+//      {
+//        stillImageOutput.outputSettings = @{AVVideoCodecKey : AVVideoCodecJPEG};
+//        [self.session addOutput:stillImageOutput];
+//        self.stillImageOutput = stillImageOutput;
+//      }
       
       __weak RCTBarcodeScannerManager *weakSelf = self;
       [self setRuntimeErrorHandlingObserver:[NSNotificationCenter.defaultCenter addObserverForName:AVCaptureSessionRuntimeErrorNotification object:self.session queue:nil usingBlock:^(NSNotification *note) {
@@ -176,6 +189,13 @@ RCT_EXPORT_METHOD(takePicture:(RCTResponseSenderBlock)callback) {
   }];
 }
 
+RCT_EXPORT_METHOD(startScanning:(RCTResponseSenderBlock)callback) {
+  self.callback = callback;
+}
+
+RCT_EXPORT_METHOD(stopScanning) {
+  return;
+}
 
 - (AVCaptureDevice *)deviceWithMediaType:(NSString *)mediaType preferringPosition:(AVCaptureDevicePosition)position
 {
@@ -225,6 +245,12 @@ RCT_EXPORT_METHOD(takePicture:(RCTResponseSenderBlock)callback) {
     NSError *error = nil;
     if ([device lockForConfiguration:&error])
     {
+      // prioritize the focus on objects near to the device
+      if ([device respondsToSelector:@selector(isAutoFocusRangeRestrictionSupported)] &&
+          device.isAutoFocusRangeRestrictionSupported) {
+        device.autoFocusRangeRestriction = AVCaptureAutoFocusRangeRestrictionNear;
+      }
+      // focus on the center of the image
       if ([device isFocusPointOfInterestSupported] && [device isFocusModeSupported:focusMode])
       {
         [device setFocusMode:focusMode];
@@ -268,6 +294,25 @@ RCT_EXPORT_METHOD(takePicture:(RCTResponseSenderBlock)callback) {
   }
 
   return types;
+}
+
+#pragma mark - AVCaptureMetadataOutputObjects Delegate
+
+- (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputMetadataObjects:(NSArray *)metadataObjects fromConnection:(AVCaptureConnection *)connection {
+
+  NSMutableArray *codes = [[NSMutableArray alloc] init];
+
+  for (AVMetadataObject *metaData in metadataObjects) {
+    AVMetadataMachineReadableCodeObject *barCodeObject = (AVMetadataMachineReadableCodeObject *)[self.previewLayer transformedMetadataObjectForMetadataObject:(AVMetadataMachineReadableCodeObject *)metaData];
+    if (barCodeObject) {
+      [codes addObject:barCodeObject];
+      NSLog(@"%@", barCodeObject.description);
+    }
+  }
+
+  if (self.callback) {
+    self.callback(codes);
+  }
 }
 
 @end

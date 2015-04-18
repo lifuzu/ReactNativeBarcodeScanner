@@ -11,7 +11,7 @@
 
 @class RCTBarcodeScanner;
 
-@interface RCTBarcodeScannerManager : RCTViewManager
+@interface RCTBarcodeScannerManager : RCTViewManager <AVCaptureMetadataOutputObjectsDelegate>
 
 @property (nonatomic) dispatch_queue_t sessionQueue;
 @property (nonatomic) AVCaptureSession *session;
@@ -20,6 +20,7 @@
 @property (nonatomic) id runtimeErrorHandlingObserver;
 @property (nonatomic) NSInteger presetCamera;
 @property (nonatomic) AVCaptureVideoPreviewLayer *previewLayer;
+@property (nonatomic, copy) void (^callback)(NSArray *codes);
 
 - (void)changeAspect:(NSString *)aspect;
 - (void)changeCamera:(NSInteger)camera;
