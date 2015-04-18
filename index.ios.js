@@ -5,27 +5,34 @@
 'use strict';
 
 var React = require('react-native');
+var BarcodeScanner = require('./BarcodeScanner');
 var {
   AppRegistry,
   StyleSheet,
   Text,
+  TouchableHighlight,
   View,
 } = React;
 
 var ReactNativeBarcodeScanner = React.createClass({
   render: function() {
     return (
-      <View style={styles.container}>
-        <Text style={styles.welcome}>
-          Welcome to React Native!
-        </Text>
-        <Text style={styles.instructions}>
-          To get started, edit index.ios.js
-        </Text>
-        <Text style={styles.instructions}>
-          Press Cmd+R to reload,{'\n'}
-          Cmd+Control+Z for dev menu
-        </Text>
+      <View>
+        <TouchableHighlight onPress={this._switchCamera}>
+          <View>
+            <BarcodeScanner
+              ref="scanner"
+              aspect="Stretch"
+              type="Front"
+              orientation="PortraitUpsideDown"
+              onScanned={this._onScannedResult}
+              style={{height: 200, width: 200}}
+            />
+          </View>
+        </TouchableHighlight>
+        <TouchableHighlight onPress={this._stopScaning}>
+          <Text>Cancel</Text>
+        </TouchableHighlight>
       </View>
     );
   }
