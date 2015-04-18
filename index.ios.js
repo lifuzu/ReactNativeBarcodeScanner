@@ -22,9 +22,9 @@ var ReactNativeBarcodeScanner = React.createClass({
           <View>
             <BarcodeScanner
               ref="scanner"
-              aspect="Stretch"
-              type="Front"
-              orientation="PortraitUpsideDown"
+              aspect="Fill"
+              type="Back"
+              orientation="Portrait"
               onScanned={this._onScannedResult}
               style={{height: 200, width: 200}}
             />
@@ -35,6 +35,9 @@ var ReactNativeBarcodeScanner = React.createClass({
         </TouchableHighlight>
       </View>
     );
+  },
+  _switchCamera: function() {
+    this.refs.scanner.switch();
   }
 });
 
