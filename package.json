@@ -1,11 +1,25 @@
 {
   "name": "ReactNativeBarcodeScanner",
-  "version": "0.0.1",
+  "version": "0.1.0",
+  "description": "Barcode scanner for React Native",
   "private": true,
   "scripts": {
     "start": "node_modules/react-native/packager/packager.sh"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lifuzu/ReactNativeBarcodeScanner"
+  },
   "dependencies": {
     "react-native": "^0.4.0"
-  }
+  },
+  "keywords": [
+    "react-component",
+    "react-native",
+    "ios",
+    "barcode",
+    "scan"
+  ],
+  "author": "Richard Lee <lifuzu@gmail.com>",
+  "license": "MIT"
 }
