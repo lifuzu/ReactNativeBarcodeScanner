@@ -18,9 +18,14 @@ var {
 } = React;
 
 var ReactNativeBarcodeScanner = React.createClass({
+  getInitialState: function() {
+    return {
+      value: ''
+    };
+  },
   render: function() {
     return (
-      <View>
+      <View style={styles.container}>
         <TouchableHighlight onPress={this._switchCamera}>
           <View>
             <BarcodeScanner
@@ -29,7 +34,7 @@ var ReactNativeBarcodeScanner = React.createClass({
               type="Back"
               orientation="Portrait"
               onScanned={this._onScannedResult}
-              style={{height: 200, width: 200}}
+              style={styles.barcode}
             />
           </View>
         </TouchableHighlight>
@@ -53,6 +58,10 @@ var ReactNativeBarcodeScanner = React.createClass({
   },
   _onScannedResult: function(data) {
     console.log(data);
+    if (this.state.value === '') {
+      this.setState({value: data});
+      AlertIOS.alert(this.state.value);
+    }
     //AlertIOS.alert(data);
     this.props.navigator.pop();
   }
@@ -116,6 +125,12 @@ var styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
+  },
+  barcode:{
+    justifyContent: 'center',
+    alignSelf: 'center',
+    height: 200,
+    width: 200,
   },
   welcome: {
     fontSize: 20,

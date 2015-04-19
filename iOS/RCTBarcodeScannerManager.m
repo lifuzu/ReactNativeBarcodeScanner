@@ -291,6 +291,8 @@ RCT_EXPORT_METHOD(stopScanning) {
 
 - (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputMetadataObjects:(NSArray *)metadataObjects fromConnection:(AVCaptureConnection *)connection {
 
+  __block NSNumber *didFind = [NSNumber numberWithBool:NO];
+
   for (AVMetadataObject *metaData in metadataObjects) {
     for (NSString *type in self.defaultMetaDataObjectTypes) {
       if ([metaData.type isEqualToString:type]) {
@@ -298,10 +300,18 @@ RCT_EXPORT_METHOD(stopScanning) {
         if (barCodeObject) {
           NSString *detectionString = [(AVMetadataMachineReadableCodeObject *)metaData stringValue];
           //NSLog(@"%@", detectionString);
-          [self.bridge.eventDispatcher sendDeviceEventWithName:@"scanned" body: detectionString];
+          // TODO: One event solution: http://stackoverflow.com/questions/19525132/avcapturesession-stoprunning-method-creates-terrible-hang
+          didFind = [NSNumber numberWithBool:YES];
+          // *** Here is the key, make your segue on the main thread
+          dispatch_async(dispatch_get_main_queue(), ^{
+            [self.bridge.eventDispatcher sendDeviceEventWithName:@"scanned" body: detectionString];
+          });
           break;
         }
       }
+    }
+    if ([didFind boolValue]) {
+      break;
     }
   }
 }
