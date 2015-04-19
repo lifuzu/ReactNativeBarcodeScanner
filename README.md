@@ -1,12 +1,22 @@
 # ReactNativeBarcodeScanner
 Implemented a barcode scanner with support of react native technology
 
-### Some screen shots here:
+## Some screen shots here:
 
 ![React Native Barcode Scanner - Launcher](http://i.imgur.com/6ddBIde.png)
 ![React Native Barcode Scanner - Scanning](http://i.imgur.com/6Effmbr.png)
 
-### Usage
+## Getting started (TBV)
+1. `npm install ReactNativeBarcodeScanner@latest --save`
+2. In XCode, in the project navigator, right click `Libraries` ➜ `Add Files to [your project's name]`
+3. Go to `node_modules` ➜ `ReactNativeBarcodeScanner` and add `ReactNativeBarcodeScanner.xcodeproj`
+4. In XCode, in the project navigator, select your project. Add `libReactNativeBarcodeScanner.a` to your project's `Build Phases` ➜ `Link Binary With Libraries`
+5. Click `ReactNativeBarcodeScanner.xcodeproj` in the project navigator and go the `Build Settings` tab. Make sure 'All' is toggled on (instead of 'Basic'). Look for `Header Search Paths` and make sure it contains both `$(SRCROOT)/../react-native/React` and `$(SRCROOT)/../../React` - mark both as `recursive`.
+5. Run your project (`Cmd+R`)
+
+## Usage
+All you need is to `require` the `BarcodeScanner` module and then use the `<BarcodeScanner/>` tag.
+
 ```javascript
 var BarcodeScanner = require('./BarcodeScanner');
 var {
