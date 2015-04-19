@@ -1,4 +1,4 @@
-var React = require('React');
+var React = require('react-native');
 var NativeModules = require('NativeModules');
 var ReactIOSViewAttributes = require('ReactIOSViewAttributes');
 var StyleSheet = require('StyleSheet');
@@ -8,6 +8,11 @@ var StyleSheetPropType = require('StyleSheetPropType');
 var NativeMethodsMixin = require('NativeMethodsMixin');
 var flattenStyle = require('flattenStyle');
 var merge = require('merge');
+
+var {
+	AlertIOS,
+	DeviceEventEmitter,
+} = React;
 
 var BarcodeScanner = React.createClass({
   propTypes: {
@@ -38,6 +43,17 @@ var BarcodeScanner = React.createClass({
       this.state.isAuthorized = isAuthorized;
       this.setState(this.state);
     }).bind(this));
+  },
+
+  componentDidMount: function() {
+    console.log('Mounted');
+    var subscription = DeviceEventEmitter.addListener(
+      'scanned',
+      (value) => { console.log(value) } );
+    },
+
+  componentDidUmnount: function() {
+    subscription.remove();
   },
 
   render: function() {

@@ -47,6 +47,9 @@ var ReactNativeBarcodeScanner = React.createClass({
   },
   _stopScaning: function() {
     this.refs.scanner.stopScanning();
+  },
+  _onScannedResult: function(data) {
+    console.log(data.value);
   }
 });
 

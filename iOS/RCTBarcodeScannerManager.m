@@ -8,6 +8,7 @@
 
 #import "RCTBarcodeScannerManager.h"
 #import "RCTBarcodeScanner.h"
+#import "RCTEventDispatcher.h"
 #import "RCTBridge.h"
 #import "RCTUtils.h"
 #import "RCTLog.h"
@@ -22,6 +23,8 @@ CGFloat const kFocalPointOfInterestY = 0.5;
 @implementation RCTBarcodeScannerManager
 
 RCT_EXPORT_MODULE();
+
+@synthesize bridge = _bridge;
 
 - (UIView *)view
 {
@@ -49,6 +52,15 @@ RCT_EXPORT_VIEW_PROPERTY(orientation, NSInteger);
                @"LandscapeRight": @(AVCaptureVideoOrientationLandscapeRight),
                @"Portrait": @(AVCaptureVideoOrientationPortrait),
                @"PortraitUpsideDown": @(AVCaptureVideoOrientationPortraitUpsideDown)
+               }
+           };
+}
+
+- (NSDictionary *)customDirectEventTypes
+{
+  return @{
+           @"scanned": @{
+               @"registrationName": @"onScanned"
                }
            };
 }
@@ -307,12 +319,14 @@ RCT_EXPORT_METHOD(stopScanning) {
     if (barCodeObject) {
       [codes addObject:barCodeObject];
       NSLog(@"%@", barCodeObject.description);
+      [self.bridge.eventDispatcher sendDeviceEventWithName:@"scanned" body: barCodeObject.stringValue];
+      break;
     }
   }
 
-  if (self.callback) {
-    self.callback(codes);
-  }
+//  if (self.callback) {
+//    self.callback(codes);
+//  }
 }
 
 @end
