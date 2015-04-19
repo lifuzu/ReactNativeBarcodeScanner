@@ -13,12 +13,7 @@
 #import "RCTUtils.h"
 #import "RCTLog.h"
 #import "UIView+React.h"
-#import "UIImage+Resize.h"
 #import <AVFoundation/AVFoundation.h>
-#import <QuartzCore/QuartzCore.h>
-
-CGFloat const kFocalPointOfInterestX = 0.5;
-CGFloat const kFocalPointOfInterestY = 0.5;
 
 @implementation RCTBarcodeScannerManager
 
@@ -56,15 +51,6 @@ RCT_EXPORT_VIEW_PROPERTY(orientation, NSInteger);
            };
 }
 
-- (NSDictionary *)customDirectEventTypes
-{
-  return @{
-           @"scanned": @{
-               @"registrationName": @"onScanned"
-               }
-           };
-}
-
 - (id)init {
   
   if ((self = [super init])) {
@@ -75,7 +61,7 @@ RCT_EXPORT_VIEW_PROPERTY(orientation, NSInteger);
     self.previewLayer = [AVCaptureVideoPreviewLayer layerWithSession:self.session];
     self.previewLayer.needsDisplayOnBoundsChange = YES;
     
-    self.sessionQueue = dispatch_queue_create("cameraManagerQueue", DISPATCH_QUEUE_SERIAL);
+    self.sessionQueue = dispatch_queue_create("barcodescannerManagerQueue", DISPATCH_QUEUE_SERIAL);
     
     dispatch_async(self.sessionQueue, ^{
       NSError *error = nil;
@@ -106,14 +92,6 @@ RCT_EXPORT_VIEW_PROPERTY(orientation, NSInteger);
 //        captureOutput.metadataObjectTypes = [self defaultMetaDataObjectTypes];
         captureOutput.metadataObjectTypes = [captureOutput availableMetadataObjectTypes];
       }
-
-//      AVCaptureStillImageOutput *stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
-//      if ([self.session canAddOutput:stillImageOutput])
-//      {
-//        stillImageOutput.outputSettings = @{AVVideoCodecKey : AVVideoCodecJPEG};
-//        [self.session addOutput:stillImageOutput];
-//        self.stillImageOutput = stillImageOutput;
-//      }
       
       __weak RCTBarcodeScannerManager *weakSelf = self;
       [self setRuntimeErrorHandlingObserver:[NSNotificationCenter.defaultCenter addObserverForName:AVCaptureSessionRuntimeErrorNotification object:self.session queue:nil usingBlock:^(NSNotification *note) {
@@ -128,6 +106,10 @@ RCT_EXPORT_VIEW_PROPERTY(orientation, NSInteger);
     });
   }
   return self;
+}
+
+- (void)dealloc {
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 RCT_EXPORT_METHOD(checkDeviceAuthorizationStatus:(RCTResponseSenderBlock) callback)
@@ -183,37 +165,34 @@ RCT_EXPORT_METHOD(changeOrientation:(NSInteger)orientation) {
   self.previewLayer.connection.videoOrientation = orientation;
 }
 
-RCT_EXPORT_METHOD(takePicture:(RCTResponseSenderBlock)callback) {
-  [[self.stillImageOutput connectionWithMediaType:AVMediaTypeVideo] setVideoOrientation:self.previewLayer.connection.videoOrientation];
-  [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:[self.stillImageOutput connectionWithMediaType:AVMediaTypeVideo] completionHandler:^(CMSampleBufferRef imageDataSampleBuffer, NSError *error) {
-    
-    if (imageDataSampleBuffer)
-    {
-      NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
-      UIImage *image = [UIImage imageWithData:imageData];
-      UIImage *rotatedImage = [image resizedImage:CGSizeMake(image.size.width, image.size.height) interpolationQuality:kCGInterpolationDefault];
-      NSString *imageBase64 = [UIImageJPEGRepresentation(rotatedImage, 1.0) base64EncodedStringWithOptions:0];
-      callback(@[[NSNull null], imageBase64]);
-    }
-    else {
-      callback(@[RCTMakeError(error.description, nil, nil)]);
-    }
-  }];
-}
-
-RCT_EXPORT_METHOD(startScanning:(RCTResponseSenderBlock)callback) {
-  self.callback = callback;
+RCT_EXPORT_METHOD(startScanning) {
+  if (!self.session.isRunning) {
+    [self init];
+  }
 }
 
 RCT_EXPORT_METHOD(stopScanning) {
-  return;
+  [self.previewLayer removeFromSuperlayer];
+  dispatch_async(self.sessionQueue, ^{
+    for (AVCaptureInput *input in self.session.inputs) {
+      [self.session removeInput:input];
+    }
+
+    for (AVCaptureOutput *output in self.session.outputs) {
+      [self.session removeOutput:output];
+    }
+
+    [self.session stopRunning];
+    self.session = nil;
+    self.previewLayer = nil;
+  });
 }
 
 - (AVCaptureDevice *)deviceWithMediaType:(NSString *)mediaType preferringPosition:(AVCaptureDevicePosition)position
 {
   NSArray *devices = [AVCaptureDevice devicesWithMediaType:mediaType];
   AVCaptureDevice *captureDevice = [devices firstObject];
-  
+
   for (AVCaptureDevice *device in devices)
   {
     if ([device position] == position)
@@ -222,7 +201,7 @@ RCT_EXPORT_METHOD(stopScanning) {
       break;
     }
   }
-  
+
   return captureDevice;
 }
 
@@ -312,21 +291,19 @@ RCT_EXPORT_METHOD(stopScanning) {
 
 - (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputMetadataObjects:(NSArray *)metadataObjects fromConnection:(AVCaptureConnection *)connection {
 
-  NSMutableArray *codes = [[NSMutableArray alloc] init];
-
   for (AVMetadataObject *metaData in metadataObjects) {
-    AVMetadataMachineReadableCodeObject *barCodeObject = (AVMetadataMachineReadableCodeObject *)[self.previewLayer transformedMetadataObjectForMetadataObject:(AVMetadataMachineReadableCodeObject *)metaData];
-    if (barCodeObject) {
-      [codes addObject:barCodeObject];
-      NSLog(@"%@", barCodeObject.description);
-      [self.bridge.eventDispatcher sendDeviceEventWithName:@"scanned" body: barCodeObject.stringValue];
-      break;
+    for (NSString *type in self.defaultMetaDataObjectTypes) {
+      if ([metaData.type isEqualToString:type]) {
+        AVMetadataMachineReadableCodeObject *barCodeObject = (AVMetadataMachineReadableCodeObject *)[self.previewLayer transformedMetadataObjectForMetadataObject:(AVMetadataMachineReadableCodeObject *)metaData];
+        if (barCodeObject) {
+          NSString *detectionString = [(AVMetadataMachineReadableCodeObject *)metaData stringValue];
+          //NSLog(@"%@", detectionString);
+          [self.bridge.eventDispatcher sendDeviceEventWithName:@"scanned" body: detectionString];
+          break;
+        }
+      }
     }
   }
-
-//  if (self.callback) {
-//    self.callback(codes);
-//  }
 }
 
 @end

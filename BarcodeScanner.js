@@ -10,7 +10,6 @@ var flattenStyle = require('flattenStyle');
 var merge = require('merge');
 
 var {
-	AlertIOS,
 	DeviceEventEmitter,
 } = React;
 
@@ -49,11 +48,13 @@ var BarcodeScanner = React.createClass({
     console.log('Mounted');
     var subscription = DeviceEventEmitter.addListener(
       'scanned',
-      (value) => { console.log(value) } );
+      (value) => { console.log(value); this.props.onScanned(value); } );
     },
 
   componentDidUmnount: function() {
     subscription.remove();
+    this.stopScanning();
+    console.log('Umounted');
   },
 
   render: function() {
@@ -78,12 +79,8 @@ var BarcodeScanner = React.createClass({
     this.setState(this.state);
   },
 
-  takePicture: function(cb) {
-    NativeModules.BarcodeScannerManager.takePicture(cb);
-  },
-
-  startScanning: function(cb) {
-    NativeModules.BarcodeScannerManager.startScanning(cb);
+  startScanning: function() {
+    NativeModules.BarcodeScannerManager.startScanning();
   },
 
   stopScanning: function() {

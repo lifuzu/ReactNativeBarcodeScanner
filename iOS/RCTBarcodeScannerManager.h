@@ -16,7 +16,6 @@
 @property (nonatomic) dispatch_queue_t sessionQueue;
 @property (nonatomic) AVCaptureSession *session;
 @property (nonatomic) AVCaptureDeviceInput *captureDeviceInput;
-@property (nonatomic) AVCaptureStillImageOutput *stillImageOutput;
 @property (nonatomic) id runtimeErrorHandlingObserver;
 @property (nonatomic) NSInteger presetCamera;
 @property (nonatomic) AVCaptureVideoPreviewLayer *previewLayer;
@@ -26,8 +25,7 @@
 - (void)changeCamera:(NSInteger)camera;
 - (void)changeOrientation:(NSInteger)orientation;
 - (AVCaptureDevice *)deviceWithMediaType:(NSString *)mediaType preferringPosition:(AVCaptureDevicePosition)position;
-- (void)takePicture:(RCTResponseSenderBlock)callback;
-- (void)startScanning:(RCTResponseSenderBlock)callback;
+- (void)startScanning;
 - (void)stopScanning;
 
 @end
