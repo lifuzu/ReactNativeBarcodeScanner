@@ -3,7 +3,7 @@
 //  ReactNativeBarcodeScanner
 //
 //  Created by Richard Lee on 4/18/15.
-//  Copyright (c) 2015 Facebook. All rights reserved.
+//  Copyright (c) 2015 Richard Lee(lifuzu@gmail.com). All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
