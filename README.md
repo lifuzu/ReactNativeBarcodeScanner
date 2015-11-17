@@ -1,3 +1,5 @@
+###Deprecated, please refer to https://github.com/lwansbrough/react-native-camera for barcode/QRcode scanner
+
 # ReactNativeBarcodeScanner
 Implemented a barcode scanner with support of react native technology
 
